@@ -1,5 +1,7 @@
 # SoStrategy
-Strategy with procedural world generation written purely in python.
+# Стратегия с процедурной генерацией ландшафта. Написана полностью на Python 3.8
+
+Strategy with procedural world generation. Written purely in Python 3.8.
 
 Russian:
 Чтобы запустить игру, запустите файл StartGame.py
