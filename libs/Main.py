@@ -9,6 +9,7 @@ from libs import TextureCreator
 from libs import PauseMenu
 # from libs.particles import ParticleSystem
 from libs import TextureRescaler
+from libs import MainGUI
 import menus.MainMenu
 import pygame
 import random
@@ -36,22 +37,34 @@ class Main:
             exit()
 
         # Initializing classes
+
+        # World generator
         self.noise = WorldGen.Noise()
+
+        # Some functions ( like clamp )
         self.functions = Functions.Functions()
+
+        # Overlay with some debug info like fps and coordinates ( F3 to turn on and off )
         self.debug = DebugInfo.Main('arial', 36)
+
+        # Texture manager, to easily load and store textures
         self.mgr = TextureManager.Main(path='textures/', textureList=['border'])
 
+        # Generating world
         self.noise.generateWorld(256, 128, 0.03,
                                  random.randint(-10000, 10000),
                                  random.randint(-10000, 10000))
 
+        # Second texture manager, to store textures with ores, because they all have white bg that we must remove
         self.mgr1 = TextureManager.Main(path='textures/', textureList=['coal', 'fish', 'wood',
                                                                        'iron', 'gold', 'diamond'],
                                         colorkey=(255, 255, 255))
-        # self.particles = ParticleSystem.Main(1366, 768, 'textures/particleBackground.png', 15,
-        #                                      'textures/particle.png', 100)
-        # self.particles.start()
+
+        # This will be initialized pause menu class, we will initializing if we want to go in pause menu
         self.pauseMenu = None
+
+        # This will be UI overlay with all game information, score, images, and so on.
+        self.mainGui = MainGUI.Main()
 
         # Dictionaries
         self.world = self.noise.get()[0]
