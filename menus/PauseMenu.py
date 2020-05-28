@@ -25,6 +25,9 @@ class PauseMenu:
         self.exitBtn = UIButton.Button('exitButton', self.buttonX+200, self.buttonY*1.1,
                                        pathToTexture='textures/', width=240, height=60)
 
+        self.settingsBtn = UIButton.Button('settingsButton', self.buttonX-120, self.buttonY*1.5,
+                                           pathToTexture='textures/', width=240, height=60)
+
         self.alive = True
         self.result = 0
 
@@ -38,6 +41,7 @@ class PauseMenu:
             pos = pygame.mouse.get_pos()
             self.continueBtn.tick(pos[0], pos[1])
             self.exitBtn.tick(pos[0], pos[1])
+            self.settingsBtn.tick(pos[0], pos[1])
 
             for e in pygame.event.get():
                 if e.type == pygame.QUIT:
@@ -51,12 +55,16 @@ class PauseMenu:
                     if e.button == 1:
                         clicked = self.continueBtn.isClicked(e.pos[0], e.pos[1])
                         exitClicked = self.exitBtn.isClicked(e.pos[0], e.pos[1])
+                        settingsClicked = self.settingsBtn.isClicked(e.pos[0], e.pos[1])
                         if clicked:
                             self.alive = False
                             self.result = 1
                         elif exitClicked:
                             self.alive = False
                             self.result = 0
+                        elif settingsClicked:
+                            self.alive = False
+                            self.result = 2
 
             self.sc.blit(self.backGround, self.backGroundRect)
 
@@ -65,5 +73,8 @@ class PauseMenu:
 
             texture1 = self.exitBtn.getButton()
             self.sc.blit(texture1, texture1.get_rect(topleft=(self.buttonX+200, self.buttonY*1.1)))
+
+            texture2 = self.settingsBtn.getButton()
+            self.sc.blit(texture2, texture2.get_rect(topleft=(self.buttonX-120, self.buttonY*1.5)))
 
             pygame.display.update()

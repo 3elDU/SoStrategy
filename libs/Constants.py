@@ -5,6 +5,7 @@ P_H = 16  # Tile height
 W_W = 64  # Window width ( in tiles )
 W_H = 32  # Window height ( in tiles )
 
+BG_COLOR = (1, 1, 1)
 BLACK = (0, 0, 0)
 WHITE = (255, 255, 255)
 RED = (255, 0, 0)

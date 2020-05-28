@@ -22,14 +22,10 @@ class Noise:
     def generateWorld(self, w, h, multiplier, px, py):
         s = time.time()
 
-        oreStartX = px * random.randint(-15, 15)
-        oreStartY = py * random.randint(-15, 15)
-
         for x in range(w):
             for y in range(h):
                 if x == 0 or x == w-1 or y == 0 or y == h-1:
                     self.rawWorld[x, y] = 'border'
-                    self.rawOres[x, y] = 'empty'
                 else:
                     xpos = x * multiplier + px
                     ypos = y * multiplier + py
@@ -50,6 +46,52 @@ class Noise:
                     else:
                         self.rawWorld[x, y] = 'empty'
 
+        for x1 in range(w):
+            for y1 in range(h):
+                rawBlock = self.rawWorld[x1, y1]
+
+                block = []
+
+                if rawBlock == 'border':
+                    color1 = DARKGRAY
+                elif rawBlock == 'water':
+                    color1 = BLUE
+                elif rawBlock == 'sand':
+                    color1 = YELLOW
+                elif rawBlock == 'land':
+                    color1 = GREEN
+                elif rawBlock == 'mountains':
+                    color1 = GRAY
+                elif rawBlock == 'snow':
+                    color1 = WHITE
+                elif rawBlock == 'empty':
+                    color1 = BLACK
+
+                """finalColor = []
+
+                for clr in color1:
+                    finalColor.append(self.functions.clamp(self.functions.noise(clr), 0, 255))"""
+
+                block.append(rawBlock)
+                block.append(color1)
+
+                self.world[x1, y1] = block
+
+        e = time.time()
+
+        print('World generated in', e - s, ' seconds.')
+
+    def generateOres(self, w, h, multiplier, px, py):
+        s = time.time()
+
+        oreStartX = px * random.randint(-15, 15)
+        oreStartY = py * random.randint(-15, 15)
+
+        for x in range(w):
+            for y in range(h):
+                if x == 0 or x == w-1 or y == 0 or y == h-1:
+                    self.rawOres[x, y] = 'empty'
+                else:
                     oreX = x * multiplier + oreStartX
                     oreY = y * multiplier + oreStartY
 
@@ -93,40 +135,8 @@ class Noise:
 
                     self.rawOres[x, y] = finalOre
 
-        for x1 in range(w):
-            for y1 in range(h):
-                rawBlock = self.rawWorld[x1, y1]
-
-                block = []
-
-                if rawBlock == 'border':
-                    color1 = DARKGRAY
-                elif rawBlock == 'water':
-                    color1 = BLUE
-                elif rawBlock == 'sand':
-                    color1 = YELLOW
-                elif rawBlock == 'land':
-                    color1 = GREEN
-                elif rawBlock == 'mountains':
-                    color1 = GRAY
-                elif rawBlock == 'snow':
-                    color1 = WHITE
-                elif rawBlock == 'empty':
-                    color1 = BLACK
-
-                """finalColor = []
-
-                for clr in color1:
-                    finalColor.append(self.functions.clamp(self.functions.noise(clr), 0, 255))"""
-
-                block.append(rawBlock)
-                block.append(color1)
-
-                self.world[x1, y1] = block
-
         e = time.time()
-
-        print('World generated in', e - s, ' seconds.')
+        print('Ores generated in', e - s, 'seconds.')
 
     def get(self):
         return self.world, self.rawOres
