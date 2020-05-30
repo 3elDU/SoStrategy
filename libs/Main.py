@@ -11,7 +11,9 @@ from menus import PauseMenu
 from libs import TextureRescaler
 from libs import MainGUI
 from libs import Civilization
-import menus.MainMenu
+from libs.rendering import Renderer
+from menus import SettingsMenu
+from menus import MainMenu
 import pygame
 import random
 import time
@@ -26,12 +28,17 @@ class Main:
         self.sc = pygame.display.set_mode((0, 0),
                                           pygame.FULLSCREEN)
 
-        pygame.display.set_caption("Step-based strategy")
+        pygame.display.set_caption("SoStrategy v0.1.21")
+
+        icon = pygame.image.load('textures/icon3.png').convert_alpha()
+        icon.set_colorkey(WHITE)
+
+        pygame.display.set_icon(icon)
 
         w, h = pygame.display.get_surface().get_size()
 
         # Displaying start menu
-        self.mainMenu = menus.MainMenu.Menu(self.sc, w, h)
+        self.mainMenu = MainMenu.Menu(self.sc, w, h)
 
         result = self.mainMenu.getResult()
         if result == -1:
@@ -97,6 +104,7 @@ class Main:
         self.w, self.h = w, h
         self.cameraSpeed = 60
         self.blockSize = 16
+        self.renderingMode = 1
         self.x = 0
         self.y = 0
         self.cursorVisibility = 128
@@ -108,6 +116,7 @@ class Main:
         # Bools
         self.displayDebugInfo = False
         self.showingOres = False
+        self.showingBuildings = True
         self.showingAllMap = False
 
         # Initializing font
@@ -136,103 +145,24 @@ class Main:
         self.xFloat = self.functions.clamp(self.civ.x - 33, 0, 255)
         self.yFloat = self.functions.clamp(self.civ.y - 17, 0, 127)
 
+        # Rendering classes
+        self.renderer1 = Renderer.RenderingMode1(self.x, self.y, self.world, self.buildings, self.ores,
+                                                 self.w, self.h, self.mgr, self.creator, self.rescaler)
+
         # Starting main loop
         self.loop()
-
-    def render(self):
-        for x in range(64):
-            for y in range(32):
-                xcord = self.x + x
-                ycord = self.y + y
-
-                if 0 <= xcord <= 255 and 0 <= ycord <= 127:
-                    block = self.world[xcord, ycord]
-
-                    if self.prevBlocks.__contains__((x, y)):
-                        if self.prevBlocks[x, y] != block[1]:
-                            pygame.draw.rect(self.mapSurf, block[1],
-                                             ((x + 1) * self.blockSize, (y + 1) * self.blockSize,
-                                              self.blockSize, self.blockSize))
-                            self.prevBlocks[x, y] = block[1]
-                    else:
-                        pygame.draw.rect(self.mapSurf, block[1], ((x + 1) * self.blockSize, (y + 1) * self.blockSize,
-                                                                  self.blockSize, self.blockSize))
-                        self.prevBlocks[x, y] = block[1]
-
-    def renderOres(self):
-        b = self.blockSize
-
-        for x in range(64):
-            for y in range(32):
-                xcord = self.x + x
-                ycord = self.y + y
-
-                ore = self.ores[xcord, ycord]
-
-                if (x, y) in self.prevOres:
-                    if self.prevOres[x, y] != ore:
-                        pygame.draw.rect(self.oresSurf, (1, 1, 1), (b + x * self.blockSize,
-                                                                    b + y * self.blockSize,
-                                                                    self.blockSize,
-                                                                    self.blockSize))
-
-                        if ore != 'empty':
-                            texture = self.rescaler.getTexture(ore, self.blockSize, self.blockSize)
-                            textureRect = texture.get_rect(topleft=(b + x * self.blockSize,
-                                                                    b + y * self.blockSize))
-
-                            self.oresSurf.blit(texture, textureRect)
-
-                        self.prevOres[x, y] = ore
-                else:
-                    pygame.draw.rect(self.oresSurf, (1, 1, 1), (b + x * self.blockSize,
-                                                                b + y * self.blockSize,
-                                                                self.blockSize,
-                                                                self.blockSize))
-
-                    if ore != 'empty':
-                        texture = self.rescaler.getTexture(ore, self.blockSize, self.blockSize)
-                        textureRect = texture.get_rect(topleft=(b + x * self.blockSize,
-                                                                b + y * self.blockSize))
-
-                        self.oresSurf.blit(texture, textureRect)
-
-                    self.prevOres[x, y] = ore
-
-    def renderBuildings(self):
-        self.buildingsSurf.fill(BG_COLOR)
-
-        for x in range(64):
-            for y in range(32):
-                xcord = x + self.x
-                ycord = y + self.y
-
-                if (xcord, ycord) in self.buildings:
-                    building = self.buildings[xcord, ycord]
-
-                    texture = self.rescaler.getTexture(building[0], self.blockSize, self.blockSize)
-                    rect = texture.get_rect(topleft=((x + 1) * self.blockSize, (y + 1) * self.blockSize))
-
-                    self.buildingsSurf.blit(texture, rect)
 
     @staticmethod
     def calculateDelta(current, prev):
         return current - prev
 
     def resize(self):
-        self.mapSurf = pygame.transform.scale(self.mapSurf, (66 * self.blockSize, 34 * self.blockSize))
-        self.oresSurf = pygame.transform.scale(self.oresSurf, (66 * self.blockSize, 34 * self.blockSize))
-        self.buildingsSurf = pygame.transform.scale(self.buildingsSurf, (66 * self.blockSize, 34 * self.blockSize))
         self.wholeMapSurf = self.creator.getTexture()
         self.wholeMapSurf = pygame.transform.scale(self.wholeMapSurf, (256 * (self.blockSize // 4),
                                                                        128 * (self.blockSize // 4)))
 
         self.startX = pygame.display.get_surface().get_width() // 2 - (32 * self.blockSize)
         self.startY = pygame.display.get_surface().get_height() // 2 - (16 * self.blockSize)
-        self.prevOres = {}
-
-        self.border = pygame.transform.scale(self.mgr.getTexture('border'), (66 * self.blockSize, 34 * self.blockSize))
-        self.mapSurf.blit(self.border, self.border.get_rect())
 
     def loop(self):
         prevFrame = time.time()
@@ -241,7 +171,6 @@ class Main:
         frame = 0
 
         while 1:
-            # self.particles.render()
 
             sTime = time.time()
 
@@ -260,7 +189,9 @@ class Main:
                             self.prevOres = {}
                             self.prevBlocks = {}
                         elif r == 2:
-                            print('Open settings')
+                            s = SettingsMenu.Menu(self.sc, self.w, self.h)
+                            result = s.getResult()
+                            print(result)
                     if e.key == pygame.K_F2:
                         pygame.image.save(self.sc, 'screenshot' + str(time.time()) + '.png')
                     if e.key == pygame.K_F3:
@@ -271,7 +202,8 @@ class Main:
                             self.resize()
                     if e.key == pygame.K_o:
                         self.showingOres = not self.showingOres
-                        self.prevOres = {}
+                    if e.key == pygame.K_b:
+                        self.showingBuildings = not self.showingBuildings
                 elif e.type == pygame.MOUSEBUTTONDOWN:
                     if e.button == 1:
                         bX = e.pos[0] - self.blockSize
@@ -291,6 +223,8 @@ class Main:
                             self.world[realx, realy] = ['userblock', RED]
 
             # Moving map
+            pos = pygame.mouse.get_pos()
+
             keys = pygame.key.get_pressed()
             if keys[pygame.K_w]:
                 self.yFloat -= d
@@ -317,26 +251,30 @@ class Main:
 
             # Rendering all
 
-            # self.worldThread.updateData(self.world, self.x, self.y, self.blockSize)
-            # self.worldThread.work()
-
             self.mainGui.updateData(self.x, self.y)
+            self.renderer1.updateData(self.x, self.y, self.blockSize, self.showingOres, self.showingBuildings,
+                                      self.world, self.ores)
 
             self.sc.fill((255, 125, 0))
 
             if not self.showingAllMap:
-                self.render()
-                self.sc.blit(self.mapSurf, self.mapSurf.get_rect(center=(self.centerX, self.centerY)))
-                if self.showingOres:
-                    self.renderOres()
-                    self.sc.blit(self.oresSurf, self.oresSurf.get_rect(center=(self.centerX, self.centerY)))
+                self.renderer1.renderAll()
 
-                self.renderBuildings()
-                self.sc.blit(self.buildingsSurf, self.buildingsSurf.get_rect(center=(self.centerX, self.centerY)))
+                s = self.renderer1.getSurf()
+                gamemap = s['map']
+                self.sc.blit(gamemap, gamemap.get_rect(center=(self.centerX, self.centerY)))
+                if self.showingOres:
+                    ores = s['ores']
+                    self.sc.blit(ores, ores.get_rect(center=(self.centerX, self.centerY)))
+                if self.showingBuildings:
+                    buildings = s['buildings']
+                    self.sc.blit(buildings, buildings.get_rect(center=(self.centerX, self.centerY)))
             else:
                 self.sc.blit(self.wholeMapSurf, self.wholeMapSurf.get_rect(center=(self.centerX, self.centerY)))
 
             self.sc.blit(self.mainGui.getSurf(), self.GUIRect)
+
+            self.sc.blit(self.cursor, self.cursor.get_rect(center=(pos[0], pos[1])))
 
             # Setting some variables to show fps, and frametime
 
